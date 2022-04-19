@@ -1,0 +1,4 @@
+PassengerPython /home/pacs/{{pac}}/users/{{user}}/tryton/.venv/bin/python
+SetEnv PYTHONPATH /home/pacs/{{pac}}/users/{{user}}/tryton/.venv/lib/python3.7/site-packages/trytond
+SetEnv TRYTOND_CONFIG /home/pacs/{{pac}}/users/{{user}}/etc/tryton.ini
+SetEnv TRYTOND_LOGGING_CONFIG /home/pacs/{{pac}}/users/{{user}}/etc/logging.ini

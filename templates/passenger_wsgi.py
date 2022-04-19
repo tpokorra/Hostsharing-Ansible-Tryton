@@ -1,0 +1,1 @@
+from trytond.application import app as application

@@ -1,0 +1,198 @@
+---
+- hosts: tryton
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    # see https://docs.ansible.com/ansible/latest/user_guide/become.html#risks-of-becoming-an-unprivileged-user
+    ansible_common_remote_group: "{{pac}}"
+    ansible_remote_tmp: ~/.ansible/tmp
+
+  tasks:
+  - name: Create user, domain and database
+    import_tasks: tasks/hs_basis.yml
+
+  #################################
+  ## install requirements
+  #################################
+  - name: Install node.js
+    import_tasks: tasks/hs_nodejs.yml
+
+  #################################
+  ## create directories
+  #################################
+  - name: create directory etc
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/etc"
+      state: directory
+  - name: create directory bin
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/bin"
+      state: directory
+  - name: create directory log
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/var/log"
+      state: directory
+  - name: create directory tryton
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/tryton"
+      state: directory
+
+  ##################################
+  ## install tryton
+  ##################################
+  - name: create virtual environment
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    shell: |
+      python3 -m venv .venv
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton"
+      creates: "/home/pacs/{{pac}}/users/{{user}}/tryton/.venv"
+
+  - name: install pip packages
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    shell: |
+      source .venv/bin/activate
+      pip install wheel || exit -1
+      pip install psycopg2 || exit -1
+      pip install trytond || exit -1
+      pip install trytond_sale || exit -1
+      touch /home/pacs/{{pac}}/users/{{user}}/.ansible_pip_installed
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton"
+      creates: "/home/pacs/{{pac}}/users/{{user}}/.ansible_pip_installed"
+
+  ##################################
+  ## install client
+  ##################################
+  - name: Check for git working tree
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    stat:
+      path: /home/pacs/{{pac}}/users/{{user}}/tryton/sao
+    register: workingtree
+  - name: get repo
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    git:
+      repo: https://github.com/tryton/sao.git
+      dest: /home/pacs/{{pac}}/users/{{user}}/tryton/sao
+      version: "{{trytonversion}}"
+      #single_branch: yes
+    when: not workingtree.stat.exists
+
+  - name: install client
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    shell: |
+      source ~/.profile
+      npm install bower --legacy-peer-deps || exit -1
+      npm install po2json --legacy-peer-deps || exit -1
+      npm install grunt-po2json --legacy-peer-deps || exit -1
+      npm install --production --legacy-peer-deps || exit -1
+      npm install grunt --legacy-peer-deps || exit -1
+      node_modules/grunt/bin/grunt || exit -1
+      touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_client_installed"
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton/sao"
+      creates: "/home/pacs/{{pac}}/users/{{user}}/.ansible_client_installed"
+
+  ##################################
+  ## configuration
+  ##################################
+  - name: upload tryton configuration file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template:
+      src: "templates/tryton.ini"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/etc/tryton.ini"
+
+  - name: upload tryton logging configuration file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template:
+      src: "templates/logging.ini"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/etc/logging.ini"
+
+  #################################
+  ## upload scripts
+  #################################
+  - name: upload restart script
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/bin/restart.sh" src="templates/restart.sh" mode=0700
+  - name: upload sql script
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/bin/sql.sh" src="templates/sql.sh" mode=0700
+
+  ######################
+  ## initialise instance
+  ######################
+  - name: initialise instance
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    shell: |
+      source .venv/bin/activate
+      echo "admin@example.org" | python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --all
+      touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_instance_initialised"
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton"
+      creates: "/home/pacs/{{pac}}/users/{{user}}/.ansible_instance_initialised"
+
+  ########################
+  ## setup the apache site
+  ########################
+  - name: check for htdocs-ssl directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    stat:
+      path: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+    register: htdocs_exists
+
+  - name: drop htdocs-ssl directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+      state: absent
+    when: htdocs_exists.stat.islnk is defined and htdocs_exists.stat.islnk == False
+
+  - name: create symbolic link for sao client
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      src: "/home/pacs/{{pac}}/users/{{user}}/tryton/sao"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+      state: link
+
+  - name: upload .htaccess file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template:
+      src: "templates/htaccess"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/.htaccess"
+  - name: upload passenger wsgi file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template:
+      src: "templates/passenger_wsgi.py"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/app-ssl/passenger_wsgi.py"
+
+
+  #################################
+  ## configure cronjobs
+  #################################
+  # TODO
