@@ -145,7 +145,10 @@
     become_user: "{{pac}}-{{user}}"
     shell: |
       source .venv/bin/activate
-      echo "admin@example.org" | python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --all
+      export TRYTONPASSFILE=/home/pacs/{{pac}}/users/{{user}}/.initialpwd
+      echo "{{password}}" > $TRYTONPASSFILE
+      python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --password --email "{{admin_email}}" --all
+      rm -f $TRYTONPASSFILE
       touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_instance_initialised"
     args:
       executable: /bin/bash

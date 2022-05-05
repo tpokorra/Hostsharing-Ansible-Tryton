@@ -7,6 +7,7 @@ tryton:
       domain: tryton.example.org
       user: tryton
       password: testpassw0rd_changeme
+      admin_email: admin@example.org
 
       # see https://nodejs.org/en/about/releases/
       noderelease: 16
@@ -14,4 +15,4 @@ tryton:
       nodeversion: v16.14.2
 
       # see branches: https://github.com/tryton/sao/branches
-      trytonversion: "6.2"
+      trytonversion: "6.4"
