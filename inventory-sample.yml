@@ -8,6 +8,7 @@ tryton:
       user: tryton
       password: testpassw0rd_changeme
       admin_email: admin@example.org
+      initialadminpassword: testpassw0rd_changeme2
 
       # see https://nodejs.org/en/about/releases/
       noderelease: 16
