@@ -22,7 +22,7 @@ try {
   $pdo = new PDO('pgsql:host=localhost;dbname={{pac}}_{{user}}', '{{pac}}_{{user}}', '{{password}}');
 
   # activate the admin and set the email address
-  $statement = $pdo->prepare("update public.users set active=true, email=:email where login=:username and active=false");
+  $statement = $pdo->prepare("update public.res_user set active=true, email=:email where login=:username and active=false");
   $statement->execute(array(':email' => $USER_EMAIL_ADDRESS, ':username' => 'admin'));
 }
 catch (Exception $e) {
