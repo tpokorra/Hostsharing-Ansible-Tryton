@@ -22,6 +22,8 @@ if (!is_run_from_cli()) {
 
 try {
     $pdo = new PDO('pgsql:host=localhost;dbname={{pac}}_{{user}}', '{{pac}}_{{user}}', '{{password}}');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
     # deactivate all users
     $statement = $pdo->prepare("update public.res_user set active=false");
     $statement->execute();

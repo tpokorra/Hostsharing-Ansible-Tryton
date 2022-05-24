@@ -20,6 +20,7 @@ if (empty($USER_EMAIL_ADDRESS)) {
 
 try {
   $pdo = new PDO('pgsql:host=localhost;dbname={{pac}}_{{user}}', '{{pac}}_{{user}}', '{{password}}');
+  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
   # activate the admin and set the email address
   $statement = $pdo->prepare("update public.res_user set active=true, email=:email where login=:username and active=false");
