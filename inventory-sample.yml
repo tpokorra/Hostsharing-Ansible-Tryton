@@ -7,6 +7,8 @@ tryton:
       domain: tryton.example.org
       user: tryton
       password: testpassw0rd_changeme
+
+      admin_user: admin
       admin_email: admin@example.org
       initialadminpassword: testpassw0rd_changeme2
 

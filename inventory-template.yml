@@ -7,8 +7,9 @@ tryton:
       domain: {{domain}}
       user: {{username}}
       password: {{password}}
-      admin_email: admin@example.org
 
+      admin_user: admin
+      admin_email: admin@example.org
       initialadminpassword: {{password1}}
 
       SaasActivationPassword: {{SaasActivationPassword}}

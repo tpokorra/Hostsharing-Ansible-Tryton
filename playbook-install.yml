@@ -129,10 +129,10 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     template: dest="/home/pacs/{{pac}}/users/{{user}}/bin/restart.sh" src="templates/restart.sh" mode=0700
-  - name: upload sql script
+  - name: upload pgpass file
     become: yes
     become_user: "{{pac}}-{{user}}"
-    template: dest="/home/pacs/{{pac}}/users/{{user}}/bin/sql.sh" src="templates/sql.sh" mode=0700
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/.pgpass" src="templates/pgpass" mode=0600
 
   ######################
   ## initialise instance
@@ -144,7 +144,7 @@
       source .venv/bin/activate
       export TRYTONPASSFILE=/home/pacs/{{pac}}/users/{{user}}/.initialpwd
       echo "{{initialadminpassword}}" > $TRYTONPASSFILE
-      python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --password --email "{{admin_email}}" --all
+      python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --password --email "{{admin_email}}" --all || exit -1
       rm -f $TRYTONPASSFILE
       touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_instance_initialised"
     args:
