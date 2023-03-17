@@ -64,8 +64,8 @@
       source .venv/bin/activate
       pip install wheel || exit -1
       pip install psycopg2 || exit -1
-      pip install trytond || exit -1
-      pip install trytond_sale || exit -1
+      pip install trytond=={{trytonversion}} || exit -1
+      pip install trytond_sale=={{trytond_sale_version}} || exit -1
       touch /home/pacs/{{pac}}/users/{{user}}/.ansible_pip_installed
     args:
       executable: /bin/bash
@@ -75,33 +75,30 @@
   ##################################
   ## install client
   ##################################
-  - name: Check for git working tree
+  - name: create directory tryton/sao
     become: yes
     become_user: "{{pac}}-{{user}}"
-    stat:
-      path: /home/pacs/{{pac}}/users/{{user}}/tryton/sao
-    register: workingtree
-  - name: get repo
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/tryton/sao"
+      state: directory
+
+  # see https://www.npmjs.com/package/tryton-sao?activeTab=readme
+  - name: download and unpack the sao client
     become: yes
     become_user: "{{pac}}-{{user}}"
-    git:
-      repo: https://github.com/tryton/sao.git
+    unarchive:
+      src: https://downloads.tryton.org/{{trytonbranch}}/tryton-sao-{{trytonversion}}.tgz
+      remote_src: yes
       dest: /home/pacs/{{pac}}/users/{{user}}/tryton/sao
-      version: "{{trytonversion}}"
-      #single_branch: yes
-    when: not workingtree.stat.exists
+      extra_opts: [--strip-components=1]
+      creates: /home/pacs/{{pac}}/users/{{user}}/tryton/sao/README.md
 
   - name: install client
     become: yes
     become_user: "{{pac}}-{{user}}"
     shell: |
       source ~/.profile
-      npm install bower --legacy-peer-deps || exit -1
-      npm install po2json --legacy-peer-deps || exit -1
-      npm install grunt-po2json --legacy-peer-deps || exit -1
-      npm install --production --legacy-peer-deps || exit -1
-      npm install grunt --legacy-peer-deps || exit -1
-      node_modules/grunt/bin/grunt || exit -1
+      npm install --production  --legacy-peer-deps || exit -1
       touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_client_installed"
     args:
       executable: /bin/bash
