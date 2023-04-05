@@ -87,7 +87,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     unarchive:
-      src: https://downloads.tryton.org/{{trytonbranch}}/tryton-sao-{{trytonversion}}.tgz
+      src: https://downloads.tryton.org/{{trytonbranch}}/tryton-sao-{{tryton_sao_version}}.tgz
       remote_src: yes
       dest: /home/pacs/{{pac}}/users/{{user}}/tryton/sao
       extra_opts: [--strip-components=1]
