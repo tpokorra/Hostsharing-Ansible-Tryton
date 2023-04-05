@@ -19,4 +19,5 @@ tryton:
 
       # see releases: https://downloads.tryton.org
       trytonbranch: "6.4"
-      trytonversion: "6.4.9"
+      trytonversion: "6.4.14"
+      trytond_sale_version: "6.4.6"

@@ -144,7 +144,7 @@
       source .venv/bin/activate
       export TRYTONPASSFILE=/home/pacs/{{pac}}/users/{{user}}/.initialpwd
       echo "{{initialadminpassword}}" > $TRYTONPASSFILE
-      python ./.venv/bin/trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --password --email "{{admin_email}}" --all || exit -1
+      trytond-admin -c ../etc/tryton.ini -d {{pac}}_{{user}} --password --email "{{admin_email}}" --all || exit -1
       rm -f $TRYTONPASSFILE
       touch "/home/pacs/{{pac}}/users/{{user}}/.ansible_instance_initialised"
     args:
