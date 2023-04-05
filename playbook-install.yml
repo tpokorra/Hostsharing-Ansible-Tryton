@@ -65,7 +65,7 @@
       pip install wheel || exit -1
       pip install psycopg2 || exit -1
       pip install trytond=={{trytonversion}} || exit -1
-      pip install trytond_sale=={{trytond_sale_version}} || exit -1
+      pip install trytond_sale>={{trytonbranch}},<{{trytonbranch_plus_one}} || exit -1
       touch /home/pacs/{{pac}}/users/{{user}}/.ansible_pip_installed
     args:
       executable: /bin/bash

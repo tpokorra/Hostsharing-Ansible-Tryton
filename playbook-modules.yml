@@ -1,0 +1,29 @@
+---
+- hosts: tryton
+  become_user: "{{pac}}-{{user}}"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    # see https://docs.ansible.com/ansible/latest/user_guide/become.html#risks-of-becoming-an-unprivileged-user
+    ansible_common_remote_group: "{{pac}}"
+    ansible_remote_tmp: ~/.ansible/tmp
+
+  tasks:
+
+  - name: install more modules
+    become: yes
+    shell: |
+      source .venv/bin/activate
+      pip install "trytond-{{item}}>={{trytonbranch}},<{{trytonbranch_plus_one}}" || exit -1
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton"
+    loop: "{{ ['account','account_asset','account_be','account_credit_limit','account_de_skr03','account_deposit','account_dunning','account_dunning_email','account_dunning_fee','account_dunning_letter','account_eu','account_invoice','account_invoice_correction','account_invoice_history','account_invoice_line_standalone','account_invoice_secondary_unit','account_invoice_stock','account_payment','account_payment_clearing','account_payment_sepa','account_payment_sepa_cfonb','account_payment_stripe','account_product','account_tax_cash','account_tax_rule_country','analytic_account','analytic_invoice','analytic_purchase','analytic_sale','authentication_sms','bank','carrier','carrier_percentage','carrier_weight','commission','commission_waiting','company','company_work_time','country','currency','customs','dashboard','edocument_uncefact','edocument_unece','ldap_authentication','marketing','marketing_automation','notification_email','party','party_relationship','party_siret','product','product_attribute','product_classification','product_classification_taxonomic','product_cost_fifo','product_cost_history','product_measurements','product_price_list','product_price_list_dates','product_price_list_parent','production','production_outsourcing','production_routing','production_split','production_work','production_work_timesheet','project','project_invoice','project_plan','project_revenue','purchase','purchase_amendment','purchase_history','purchase_invoice_line_standalone','purchase_request','purchase_request_quotation','purchase_requisition','purchase_secondary_unit','purchase_shipment_cost','sale','sale_advance_payment','sale_amendment','sale_complaint','sale_credit_limit','sale_extra','sale_history','sale_invoice_grouping','sale_opportunity','sale_payment','sale_price_list','sale_product_customer','sale_promotion','sale_promotion_coupon','sale_shipment_cost','sale_shipment_grouping','sale_shipment_tolerance','sale_stock_quantity','sale_subscription','sale_subscription_asset','sale_supply','sale_supply_drop_shipment','stock','stock_consignment','stock_forecast','stock_inventory_location','stock_location_move','stock_location_sequence','stock_lot','stock_lot_sled','stock_lot_unit','stock_package','stock_package_shipping','stock_package_shipping_dpd','stock_package_shipping_ups','stock_product_location','stock_secondary_unit','stock_shipment_measurements','stock_split','stock_supply','stock_supply_day','stock_supply_forecast','stock_supply_production','timesheet','timesheet_cost','user_role','web_shortener','web_user'] }}"
+
+  - name: update modules list
+    become: yes
+    shell: |
+      source .venv/bin/activate
+      trytond-admin -c ~/etc/tryton.ini -d {{pac}}_{{user}} --update-modules-list || exit -1
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/tryton"

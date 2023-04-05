@@ -22,6 +22,8 @@ tryton:
 
       # see releases: https://downloads.tryton.org
       trytonbranch: "6.4"
+      # we don't want this branch
+      trytonbranch_plus_one: "6.6"
+
       trytonversion: "6.4.14"
       tryton_sao_version: "6.4.13"
-      trytond_sale_version: "6.4.6"
